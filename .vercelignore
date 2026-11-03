@@ -1,0 +1,16 @@
+.env
+.env.*
+.git
+.ai
+.claude
+.codex
+vendor
+node_modules
+storage
+tests
+*.log
+*.sql
+*.sqlite*
+bootstrap/cache/*.php
+AGENTS.md
+CLAUDE.md
