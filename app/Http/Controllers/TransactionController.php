@@ -38,8 +38,14 @@ class TransactionController extends Controller
 
     public function store(Request $request, MembershipProcessing $processing)
     {
-        $data = $request->validate(['member_id' => ['required', 'integer', 'exists:members,id'], 'type' => ['required', Rule::in(['Application', 'Renewal'])]]);
-        $transaction = $processing->create($data['member_id'], $data['type'], $request->user()->id);
+        $data = $request->validate([
+            'member_id' => ['required', 'integer', 'exists:members,id'],
+            'type' => ['required', Rule::in(['Application', 'Renewal'])],
+            'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
+            'location_consent' => [Rule::when($request->filled('latitude') || $request->filled('longitude'), ['required', 'accepted'], ['nullable', 'boolean'])],
+        ]);
+        $transaction = $processing->create($data['member_id'], $data['type'], $request->user()->id, $data);
 
         return redirect()->route('transactions.show', $transaction)->with('success', 'Transaction created. Record payment before approval.');
     }

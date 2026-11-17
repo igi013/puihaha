@@ -13,6 +13,8 @@
 <div><label for="membership_level_id">Level *</label><select id="membership_level_id" name="membership_level_id" required><option value="">Choose a level</option>@foreach($levels as $level)<option value="{{ $level->id }}" @selected(old('membership_level_id', $member->membership_level_id) == $level->id)>{{ $level->name }}</option>@endforeach</select></div>
 <div class="full"><label for="address">Address</label><textarea id="address" name="address" maxlength="2000">{{ old('address', $member->address) }}</textarea></div>
 <div><label for="member-status">Status *</label><select id="member-status" name="status" required><option value="active" @selected(old('status', $member->status) === 'active')>Active</option><option value="inactive" @selected(old('status', $member->status) === 'inactive')>Inactive</option></select></div>
-</div><div class="actions"><button>{{ $member->exists ? 'Save changes' : 'Register member' }}</button><a class="button secondary" href="{{ $member->exists ? route('members.show', $member) : route('members.index') }}">Cancel</a></div>
+</div>
+@include('members.location', ['location' => $member, 'editable' => true])
+<div class="actions"><button>{{ $member->exists ? 'Save changes' : 'Register member' }}</button><a class="button secondary" href="{{ $member->exists ? route('members.show', $member) : route('members.index') }}">Cancel</a></div>
 </form>
 @endsection

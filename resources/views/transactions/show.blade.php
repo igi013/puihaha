@@ -14,6 +14,14 @@
 @if($transaction->status === 'Paid')<form class="actions" method="POST" action="{{ route('transactions.approve', $transaction) }}" onsubmit="return confirm('Approve this paid membership and apply its validity period?')">@csrf<button>Approve membership</button></form>@endif
 @if($transaction->status === 'Pending' && $transaction->payments->isEmpty())<form class="actions" method="POST" action="{{ route('transactions.cancel', $transaction) }}" onsubmit="return confirm('Cancel this unpaid transaction?')">@csrf<button class="secondary">Cancel transaction</button></form>@endif
 </section>
+@if($transaction->type === 'Application')
+<section class="panel" style="margin-top:24px"><h2>Application email</h2>
+<p>{{ match($transaction->application_email_status) { 'sent' => 'Sent to the mail provider on '.$transaction->application_email_sent_at?->format('M j, Y g:i A').'.', 'queued' => 'Queued for sending.', 'failed' => 'Sending failed. The application and payment records are safe; retry when email is available.', 'not_configured' => 'Email sending has not been configured yet.', 'pending' => 'Waiting to send.', default => 'No application email was requested for this existing transaction.' } }}</p>
+@if($transaction->application_email_to)<p class="muted">Recipient: {{ $transaction->application_email_to }}. This acknowledgment does not verify email ownership or approve membership.</p>@endif
+@if(in_array($transaction->application_email_status, ['failed','not_configured','pending']))<form method="POST" action="{{ route('transactions.application-email', $transaction) }}">@csrf<button class="secondary">Send application acknowledgment</button></form>@endif
+</section>
+@endif
+@if($transaction->latitude !== null && $transaction->longitude !== null)<section class="panel" style="margin-top:24px">@include('members.location', ['location' => $transaction, 'editable' => false])</section>@endif
 @if($transaction->status === 'Pending')
 <section class="panel" style="margin-top:24px"><h2>Record payment</h2><p class="muted">Record a payment already received. This form does not charge cards, GCash or bank accounts. Partial payments are allowed; overpayments are rejected.</p>
 <form method="POST" action="{{ route('payments.store', $transaction) }}">@csrf<input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $paymentKey) }}"><div class="grid">

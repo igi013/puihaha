@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Member extends Model
 {
-    protected $fillable = ['membership_number', 'first_name', 'last_name', 'email', 'phone', 'address', 'membership_category_id', 'membership_level_id', 'status'];
+    protected $fillable = ['membership_number', 'first_name', 'last_name', 'email', 'phone', 'address', 'membership_category_id', 'membership_level_id', 'status', 'latitude', 'longitude', 'location_consented_at'];
 
     public static function register(array $details): self
     {
@@ -33,7 +33,7 @@ class Member extends Model
 
     protected function casts(): array
     {
-        return ['membership_starts_at' => 'date', 'membership_expires_at' => 'date'];
+        return ['membership_starts_at' => 'date', 'membership_expires_at' => 'date', 'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'location_consented_at' => 'datetime'];
     }
 
     public function transactions(): HasMany

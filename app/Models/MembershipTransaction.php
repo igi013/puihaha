@@ -12,7 +12,7 @@ class MembershipTransaction extends Model
 
     protected function casts(): array
     {
-        return ['amount_due' => 'decimal:2', 'starts_at' => 'date', 'expires_at' => 'date', 'approved_at' => 'datetime', 'cancelled_at' => 'datetime'];
+        return ['amount_due' => 'decimal:2', 'starts_at' => 'date', 'expires_at' => 'date', 'approved_at' => 'datetime', 'cancelled_at' => 'datetime', 'latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'location_consented_at' => 'datetime', 'application_email_queued_at' => 'datetime', 'application_email_sent_at' => 'datetime'];
     }
 
     public function member(): BelongsTo

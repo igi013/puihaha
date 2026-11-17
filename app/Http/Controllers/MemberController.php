@@ -43,7 +43,7 @@ class MemberController extends Controller
 
     public function store(MemberRequest $request)
     {
-        $member = Member::register($request->validated());
+        $member = Member::register($request->memberDetails());
 
         return redirect()->route('members.show', $member)->with('success', 'Member registered successfully.');
     }
@@ -66,7 +66,7 @@ class MemberController extends Controller
 
     public function update(MemberRequest $request, Member $member)
     {
-        $member->update($request->validated());
+        $member->update($request->memberDetails());
 
         return redirect()->route('members.show', $member)->with('success', 'Member details updated.');
     }

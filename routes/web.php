@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApplicationEmailController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\LoginController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\WeatherController;
 use App\Http\Middleware\EnsureMembershipAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,8 @@ Route::get('/login', [LoginController::class, 'create'])->middleware('guest')->n
 Route::post('/login', [LoginController::class, 'store'])->middleware('guest')->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 Route::middleware(['auth', EnsureMembershipAdmin::class])->group(function () {
+    Route::get('/weather', [WeatherController::class, 'show'])->middleware('throttle:weather')->name('weather.show');
+    Route::post('transactions/{transaction}/application-email', [ApplicationEmailController::class, 'store'])->middleware('throttle:application-email')->name('transactions.application-email');
     Route::patch('members/{member}/deactivate', [MemberController::class, 'deactivate'])->name('members.deactivate');
     Route::resource('members', MemberController::class);
     Route::resource('categories', CategoryController::class);

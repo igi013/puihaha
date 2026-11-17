@@ -9,6 +9,7 @@
 <div><dt>Status</dt><dd><span class="status {{ $member->status }}">{{ ucfirst($member->status) }}</span></dd></div><div><dt>Registered</dt><dd>{{ $member->created_at->format('M j, Y') }}</dd></div>
 <div class="full"><dt>Address</dt><dd>{{ $member->address ?: 'Not provided' }}</dd></div>
 </dl></section>
+<section class="panel" style="margin-top:24px">@include('members.location', ['location' => $member, 'editable' => false])</section>
 <section class="panel" style="margin-top:24px"><div class="heading"><div><h2>Membership details</h2><p class="muted">Validity begins when a paid application is approved.</p></div>@if($member->status === 'active')<a class="button" href="{{ route('transactions.create', ['member_id' => $member->id]) }}">New transaction</a>@endif</div>
 <dl>
 <div><dt>Assigned level fee</dt><dd>{{ $member->level->fee !== null ? '₱'.number_format((float)$member->level->fee, 2) : 'Not set' }}</dd></div>

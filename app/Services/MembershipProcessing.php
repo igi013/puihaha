@@ -18,9 +18,9 @@ class MembershipProcessing
         }
     }
 
-    public function create(int $memberId, string $type, int $adminId): MembershipTransaction
+    public function create(int $memberId, string $type, int $adminId, array $location = []): MembershipTransaction
     {
-        return DB::transaction(function () use ($memberId, $type, $adminId) {
+        return DB::transaction(function () use ($memberId, $type, $adminId, $location) {
             $member = Member::lockForUpdate()->findOrFail($memberId);
             $this->require($member->status === 'active', 'Reactivate this member before creating a transaction.');
             $this->require(! $member->transactions()->whereIn('status', ['Pending', 'Paid'])->exists(), 'This member already has an unfinished transaction. Complete or cancel it first.');
@@ -30,13 +30,23 @@ class MembershipProcessing
             $category = $member->category()->firstOrFail();
             $this->require($level->fee !== null && $level->validity_months > 0, 'Set the membership level fee and validity period first.');
 
-            return MembershipTransaction::create([
+            $transaction = MembershipTransaction::create([
                 'reference_number' => 'TXN-'.Str::ulid(), 'member_id' => $member->id,
                 'membership_category_id' => $category->id, 'membership_level_id' => $level->id,
                 'category_name' => $category->name, 'level_name' => $level->name, 'benefits' => $level->benefits,
                 'type' => $type, 'status' => MembershipTransaction::cents($level->fee) === 0 ? 'Paid' : 'Pending',
                 'amount_due' => $level->fee, 'validity_months' => $level->validity_months, 'created_by' => $adminId,
+                'latitude' => $location['latitude'] ?? null, 'longitude' => $location['longitude'] ?? null,
+                'location_consented_at' => isset($location['latitude'], $location['longitude']) ? now() : null,
+                'application_email_to' => $type === 'Application' ? $member->email : null,
+                'application_email_name' => $type === 'Application' ? $member->first_name.' '.$member->last_name : null,
+                'application_email_status' => $type === 'Application' ? 'pending' : null,
             ]);
+            if ($type === 'Application') {
+                app(ApplicationEmail::class)->dispatch($transaction->id);
+            }
+
+            return $transaction;
         });
     }
 
