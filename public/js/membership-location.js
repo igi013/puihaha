@@ -22,13 +22,10 @@
                 this.element.setAttribute('role', 'img');
                 this.element.setAttribute('aria-label', 'Selected membership location');
                 this.element.style.cssText = 'position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);pointer-events:none;';
-                const label = document.createElement('span');
-                label.textContent = 'Selected location';
-                label.style.cssText = 'white-space:nowrap;background:#fff;color:#191b20;border:1px solid #ad2533;border-radius:5px;padding:5px 9px;font:600 12px/1.4 "Segoe UI",Arial,sans-serif;box-shadow:0 2px 8px #0003;margin-bottom:4px;';
                 const pin = document.createElement('div');
                 pin.style.cssText = 'width:44px;height:56px;filter:drop-shadow(0 3px 3px #0006);';
                 pin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56" aria-hidden="true"><path d="M22 53C18 47 3 33 3 22a19 19 0 1 1 38 0c0 11-15 25-19 31Z" fill="#ad2533" stroke="#fff" stroke-width="3"/><circle cx="22" cy="22" r="7" fill="#fff"/></svg>';
-                this.element.append(label, pin);
+                this.element.append(pin);
                 this.getPanes().floatPane.append(this.element);
             }
             draw() {
