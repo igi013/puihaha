@@ -50,6 +50,7 @@
         const mapMessage = panel.querySelector('[data-map-message]');
         const editable = panel.dataset.editable === 'true';
         const weatherButton = panel.querySelector('[data-load-weather]');
+        const weatherReading = panel.querySelector('[data-weather-reading]');
         const locationStatus = panel.querySelector('[data-location-status]');
         let map, point, request;
         function coordinates() {
@@ -71,16 +72,40 @@
             const position = coordinates();
             if (!position) { weather.textContent = 'Choose a location or enter valid latitude and longitude first.'; return; }
             request = new AbortController();
+            const activeRequest = request;
+            weatherButton.disabled = true;
+            weatherButton.textContent = 'Loading…';
+            weather.dataset.state = '';
             weather.textContent = 'Loading current weather…';
             try {
                 const url = new URL(panel.dataset.weatherUrl, window.location.origin);
                 url.search = new URLSearchParams({lat: position.lat, lon: position.lng});
                 const response = await fetch(url, {signal: request.signal, headers: {Accept: 'application/json'}, credentials: 'same-origin'});
                 const data = await response.json();
-                if (!response.ok) { weather.textContent = response.status === 429 ? 'Too many weather requests. Please wait a minute.' : (data.message || 'Weather is currently unavailable.'); return; }
+                if (!response.ok) { weatherReading.hidden = true; weather.textContent = response.status === 429 ? 'Too many weather requests. Please wait a minute.' : (data.message || 'Weather is currently unavailable.'); return; }
+                if (!Number.isFinite(data.temperature)) throw new Error('Invalid weather response');
+                panel.querySelector('[data-weather-temperature]').textContent = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2}).format(data.temperature);
+                panel.querySelector('[data-weather-place]').textContent = data.place;
+                panel.querySelector('[data-weather-description]').textContent = data.description;
+                panel.querySelector('[data-weather-humidity]').textContent = data.humidity == null ? '' : `Humidity ${data.humidity}%`;
+                const description = String(data.description).toLowerCase();
+                const icon = /thunder/.test(description) ? 'storm' : /snow|sleet/.test(description) ? 'snow' : /rain|drizzle/.test(description) ? 'rain' : /mist|fog|haze|smoke|dust|sand|ash/.test(description) ? 'mist' : /clear/.test(description) ? 'sun' : 'cloud';
+                panel.querySelectorAll('[data-weather-icon]').forEach(shape => {
+                    shape.toggleAttribute('hidden', shape.dataset.weatherIcon !== icon && !(shape.dataset.weatherIcon === 'cloud' && icon !== 'sun'));
+                });
+                weatherReading.hidden = false;
+                weather.dataset.state = 'ready';
                 weather.textContent = `${data.place}: ${data.temperature}°C · ${data.description}${data.humidity == null ? '' : ` · Humidity ${data.humidity}%`}`;
             } catch (error) {
-                if (error.name !== 'AbortError') weather.textContent = 'Weather is currently unavailable. Please try again later.';
+                if (error.name !== 'AbortError') {
+                    weatherReading.hidden = true;
+                    weather.textContent = 'Weather is currently unavailable. Please try again later.';
+                }
+            } finally {
+                if (request === activeRequest) {
+                    weatherButton.disabled = !coordinates();
+                    weatherButton.textContent = weatherReading.hidden ? 'Load weather' : 'Refresh weather';
+                }
             }
         }
         function updateLocationStatus() {
@@ -93,6 +118,9 @@
             if (request) request.abort();
             updateLocationStatus();
             if (consent) consent.checked = false;
+            weatherReading.hidden = true;
+            weather.dataset.state = '';
+            weatherButton.textContent = 'Load weather';
             weather.textContent = 'Location changed. Load weather to see current conditions.';
             drawPoint();
         }
