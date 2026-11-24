@@ -22,7 +22,9 @@
         const weather = panel.querySelector('[data-weather]');
         const mapMessage = panel.querySelector('[data-map-message]');
         const editable = panel.dataset.editable === 'true';
-        let map, point, request, weatherTimer;
+        const weatherButton = panel.querySelector('[data-load-weather]');
+        const locationStatus = panel.querySelector('[data-location-status]');
+        let map, point, request;
         function coordinates() {
             if (latitude.value.trim() === '' || longitude.value.trim() === '') return null;
             const lat = Number(latitude.value), lng = Number(longitude.value);
@@ -54,15 +56,24 @@
                 if (error.name !== 'AbortError') weather.textContent = 'Weather is currently unavailable. Please try again later.';
             }
         }
+        function updateLocationStatus() {
+            const selected = coordinates() !== null;
+            locationStatus.textContent = selected ? 'Location selected' : 'No location selected';
+            locationStatus.dataset.selected = String(selected);
+            weatherButton.disabled = !selected;
+        }
         function locationChanged() {
+            if (request) request.abort();
+            updateLocationStatus();
             if (consent) consent.checked = false;
             weather.textContent = 'Location changed. Load weather to see current conditions.';
             drawPoint();
         }
         latitude.addEventListener('input', locationChanged);
         longitude.addEventListener('input', locationChanged);
-        panel.querySelector('[data-load-weather]').addEventListener('click', loadWeather);
-        panel.querySelector('[data-clear-location]')?.addEventListener('click', () => { latitude.value = ''; longitude.value = ''; if (request) request.abort(); clearTimeout(weatherTimer); locationChanged(); });
+        weatherButton.addEventListener('click', loadWeather);
+        updateLocationStatus();
+        panel.querySelector('[data-clear-location]')?.addEventListener('click', () => { latitude.value = ''; longitude.value = ''; if (request) request.abort(); locationChanged(); });
         panel.querySelector('[data-load-map]').addEventListener('click', async event => {
             const button = event.currentTarget;
             button.disabled = true;
@@ -73,12 +84,11 @@
                 canvas.hidden = false;
                 map = new google.maps.Map(canvas, {center: coordinates() || {lat: 14.5995, lng: 120.9842}, zoom: 14, streetViewControl: false, mapTypeControl: false});
                 drawPoint();
+                panel.querySelector('[data-map-placeholder]').hidden = true;
                 if (editable) map.addListener('click', event => {
                     latitude.value = event.latLng.lat().toFixed(7);
                     longitude.value = event.latLng.lng().toFixed(7);
                     locationChanged();
-                    clearTimeout(weatherTimer);
-                    weatherTimer = setTimeout(loadWeather, 400);
                 });
                 mapMessage.textContent = editable ? 'Click the map to choose a location. Manila is only the starting view; no location is saved until selected.' : 'Showing the saved location.';
                 button.hidden = true;
